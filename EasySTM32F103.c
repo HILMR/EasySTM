@@ -1,5 +1,5 @@
 /*
-	【EasySTM32F103库函数说明】
+	【EasySTM32F103-标准库 函数说明】
 	本库集成封装了STM32F103系列单片机多种基本功能，简化设置，易于入门，
 	贴近Arduino的编程风格，尤其适合从Arduino进阶进入STM32的学习
 	主要功能有：数字输出、上下拉数字输入、模拟输入、PWM输出、串口通信、
@@ -8,6 +8,8 @@
 作者：LMR
 版本号：V1.0
 创建日期：2018-4-20
+更新 V1.0.1
+更新内容：计时器加入单位转换、启动和停止
 
 */
 
@@ -438,6 +440,7 @@ u8 u1_bufid=0;//读取数据编号
 u8 u2_bufid=0;
 u8 u3_bufid=0;
 
+
 void USART1_IRQHandler(void)
 {
 	 
@@ -450,10 +453,10 @@ void USART1_IRQHandler(void)
 		 u1_res[u1_bufid]=0;
 	 }
 	 u1_bufid=0;
-	 /*包含起始位标记
-	 u1_bufid=1;//数据归位清除
-	 u1_res[0]=USART_ReceiveData(USART1);
-	 */
+	 //包含起始位标记
+	 //u1_bufid=1;//数据归位清除
+	 //u1_res[0]=USART_ReceiveData(USART1);
+	 
 	 }
 	 else
 	 {
@@ -507,7 +510,7 @@ void USART3_IRQHandler(void)
 	 }
  }
 
- char* Serialread(u8 SerialID,u8 SFlag)
+ u8 * Serialread(u8 SerialID,u8 SFlag)
  {
 	 switch(SerialID)
 	 {
@@ -528,7 +531,6 @@ void USART3_IRQHandler(void)
 			 {
 				 u1_res[u1_bufid]=0;
 			 }
-			 u1_flg=0;
 			 u1_bufid=0;
 	 
 		 }
@@ -538,7 +540,6 @@ void USART3_IRQHandler(void)
 			 {
 				 u2_res[u2_bufid]=0;
 			 }
-			 u2_flg=0;
 			 u2_bufid=0;
 	 
 		 }
@@ -548,7 +549,6 @@ void USART3_IRQHandler(void)
 			 {
 				 u3_res[u3_bufid]=0;
 			 }
-			 u3_flg=0;
 			 u3_bufid=0;
 	 
 		 } 
@@ -644,14 +644,20 @@ void USART3_IRQHandler(void)
 	 EXTI_ClearITPendingBit(EXTI_Line_x);
  }
  
- void timerInterrupt(TIM_TypeDef* TIMx,u16 tdelta)
+ void timerInterrupt(TIM_TypeDef* TIMx,u16 tdelta,u8 sunit)
  {
-	 u16 psc=7199;
-	 u16 arr=tdelta*0.001*72*1000000/7200-1;
-	 
 	 TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 	 NVIC_InitTypeDef NVIC_InitStructure;
 	 
+	 u16 psc;
+	 u16 arr;
+	 switch(sunit)
+	 {
+		 case 0:psc=7199;arr=tdelta*10000;break;
+		 case 1:psc=7199;arr=tdelta*10;break;
+		 case 2:psc=35;arr=tdelta;break;
+	 }
+
 	if(TIMx==TIM1){RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM1 , ENABLE);}
 	if(TIMx==TIM2){RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2 , ENABLE);}
 	if(TIMx==TIM3){RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 , ENABLE);}
@@ -679,8 +685,18 @@ void USART3_IRQHandler(void)
 	 NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;  //从优先级
 	 NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE; //IRQ通道被使能
 	 NVIC_Init(&NVIC_InitStructure);  //初始化NVIC寄存器
-	 
-	 TIM_Cmd(TIMx, ENABLE);  //使能TIMx	
+
  }
  
+void Timer_Start(TIM_TypeDef* TIMx)
+{
+	    TIM_Cmd(TIMx, ENABLE);	
+}
+
+void Timer_End(TIM_TypeDef* TIMx)
+{
+	TIM_Cmd(TIMx, DISABLE);	
+	TIMx->CNT=0;
+}
+
 

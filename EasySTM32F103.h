@@ -2,7 +2,7 @@
 #define __EasySTM32F103_H 
 
 /*
-	【EasySTM32F103库函数说明】
+	【EasySTM32F103-标准库 函数说明】
 	本库集成封装了STM32F103系列单片机多种基本功能，简化设置，易于入门，
 	贴近Arduino的编程风格，尤其适合从Arduino进阶进入STM32的学习
 	主要功能有：数字输出、上下拉数字输入、模拟输入、PWM输出、串口通信、
@@ -11,6 +11,8 @@
 作者：LMR
 版本号：V1.0
 创建日期：2018-4-20
+更新 V1.0.1
+更新内容：计时器加入单位转换、启动和停止
 
 */
 
@@ -220,7 +222,7 @@ void Serialprint(u8 SerialID,char* SData);
 		SerialID 串口编号
 		SFlag 起始位标记号（char）
 */
-char* Serialread(u8 SerialID,u8 SFlag);
+u8* Serialread(u8 SerialID,u8 SFlag);
 
 void Serialclear(u8 SerialID);
 
@@ -261,8 +263,20 @@ void Interruptclear(u16 GPIO_Pin);
 /*【timerInterrupt函数】
 		说明：定时器中断函数
 		TIMx 定时器编号，包括TIM1,TIM2,TIM3,TIM4,TIM5(C8T6无)
-		tdelta 中断间隔时间，以ms为单位
+		tdelta 中断间隔时间
+		sunit 计时的时间单位，包含秒TIMER_S、毫秒TIMER_MS、微秒TIMER_US
 */
-void timerInterrupt(TIM_TypeDef* TIMx,u16 tdelta);
-
+#define TIMER_S 0
+#define TIMER_MS 1
+#define TIMER_US 2
+void timerInterrupt(TIM_TypeDef* TIMx,u16 tdelta, u8 sunit);
+/*【Timer_Start函数】
+		说明：定时器启动
+*/
+void Timer_Start(TIM_TypeDef* TIMx);
+	/*【Timer_End函数】
+		说明：定时器关闭
+*/
+void Timer_End(TIM_TypeDef* TIMx);
+	
 #endif
